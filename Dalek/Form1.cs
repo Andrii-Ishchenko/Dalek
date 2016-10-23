@@ -18,36 +18,41 @@ namespace Dalek
         private int startX, startY, endX, endY;
         private int fieldSizeX;
         private int fieldSizeY;
-
+        private Graphics g;
         private int cellSize = 36;
 
         public Form1(Game game)
         {
             InitializeComponent();
 
+            this.DoubleBuffered = true;
+
             this.SetStyle(
                   ControlStyles.UserPaint |
                   ControlStyles.AllPaintingInWmPaint |
-                  ControlStyles.DoubleBuffer, true);
+                  ControlStyles.ResizeRedraw |
+                  ControlStyles.OptimizedDoubleBuffer, true);
+
+            g = CreateGraphics();
 
             this.game = game;
         }
 
-        private void setSize()
+        private void SetSize()
         {
             var minFormSizeX = (int)(fieldSizeX * 1.2);
             var minFormSizeY = (int)(fieldSizeY * 1.2);
 
-            if (panel1.Width < minFormSizeX)
+            if (Width  < minFormSizeX)
             {
-                var delta = minFormSizeX - panel1.Width;
+                var delta = minFormSizeX - Width;
                 Width += delta;
             }
 
 
-            if (panel1.Height < minFormSizeY)
+            if (Height - pnlTop.Height - pnlBottom.Height < minFormSizeY)
             {
-                var delta = minFormSizeY - panel1.Height;
+                var delta = minFormSizeY - (Height - pnlTop.Height - pnlBottom.Height);
                 Height += delta;
             }
 
@@ -59,12 +64,7 @@ namespace Dalek
         {
             fieldSizeX = cellSize * game.MX;
             fieldSizeY = cellSize * game.MY;
-            setSize();
-        }
-
-        private void panel1_Paint(object sender, PaintEventArgs e)
-        {
-            Draw();
+            SetSize();
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -93,15 +93,15 @@ namespace Dalek
 
             }
 
-            panel1.Invalidate();
+            Invalidate();
         }
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            panel1.Invalidate();
+            //Invalidate();
 
-            startX = (panel1.Width - fieldSizeX) / 2;
-            startY = (panel1.Height - fieldSizeY) / 2;
+            startX = (Width - fieldSizeX) / 2;
+            startY = (pnlTop.Height +( Height -(pnlTop.Height + pnlBottom.Height)) - fieldSizeY) / 2;
 
             endX = startX + fieldSizeX;
             endY = startY + fieldSizeY;
@@ -109,16 +109,23 @@ namespace Dalek
 
         private void Draw()
         {
-            using(Graphics g = this.panel1.CreateGraphics())
-            {
-                lbLevel.Text = game.Level.ToString();
-                lbScore.Text = game.Score.ToString();
+            lbLevel.Text = game.Level.ToString();
+            lbScore.Text = game.Score.ToString();
 
-                DrawField(g);
-                DrawHero(g);
-                DrawDaleks(g);
-            }
+            DrawField(g);
+            DrawHero(g);
+            DrawDaleks(g);
+        }
 
+        private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            Draw();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            g = e.Graphics;
+            Draw();
         }
 
         private void DrawDaleks(Graphics g)
@@ -148,7 +155,7 @@ namespace Dalek
             for (int i = 0; i <= game.MX; i++)
             {
                 g.DrawLine(borderPen, startX + i * cellSize, startY, startX + i * cellSize, endY);
-                //Debug.WriteLine("[{0},{1}]->[{2},{3}]", startX + i * cellSize, startY, startX + i * cellSize, endY);
+                Debug.WriteLine("[{0},{1}]->[{2},{3}]", startX + i * cellSize, startY, startX + i * cellSize, endY);
             }
 
 
@@ -156,10 +163,12 @@ namespace Dalek
             for (int i = 0; i <= game.MY; i++)
             {
                 g.DrawLine(borderPen, startX, startY + i * cellSize, endX, startY + i * cellSize);
-               // Debug.WriteLine("[{0},{1}]->[{2},{3}]", startX, startY + i * cellSize, endX, startY + i * cellSize);
+               Debug.WriteLine("[{0},{1}]->[{2},{3}]", startX, startY + i * cellSize, endX, startY + i * cellSize);
             }
 
             backgroundBrush.Dispose();
+            borderPen.Dispose();
+            g.Flush();
         }
     }
        

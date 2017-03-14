@@ -36,7 +36,7 @@ void Game::setDaleks()
 {
     daleksCount = 4 * level;
     
-    daleks = vector<Dalek>(0);
+    daleks.clear();
 
     vector<Dalek>::iterator it;
 
